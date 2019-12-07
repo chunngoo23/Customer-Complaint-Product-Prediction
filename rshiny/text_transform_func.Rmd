@@ -1,0 +1,18 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r}
+# funct transform x with tf-idf
+
+```
+
+
+
+```{python}
+#func transform y to numeric
+
+
+```

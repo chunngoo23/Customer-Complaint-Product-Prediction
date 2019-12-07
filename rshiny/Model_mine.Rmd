@@ -1,0 +1,194 @@
+---
+title: "Model"
+output:
+  html_document:
+    df_print: paged
+---
+
+This Shint app is to demo our machine learning model. It can quikly upload test data and get amazed by your nice model. In this notebook, we will build a regularized logistic regression that predicts whether microchips from a fabrication plant passes quality assurance (QA). During QA, each microchip goes through various tests to ensure it is functioning correctly. Suppose you are the product manager of the factory and you have the test results for some microchips on two diffeerent tests. From these two tests, you would like to determine whether the microchips should be accepted or rejected. Next, we will save the model and build a shiny app and test the app by uploading test data. Finally, we will download the data we uploaded with predictions using the machine learning model we buit below. The data is from the famous Machine Learning Coursera Course by Andrew Ng. The data can be downloaded from [here](http://datascience-enthusiast.com/data/ex2data2.txt).
+
+
+**We will use the caret package for cross-validation and grid search**
+```{r, message=FALSE}
+library(readr)
+library(caret)
+library(tidyverse)
+```
+
+## Import Packages
+```{python}
+import pandas as pd
+import numpy as np
+from warnings import simplefilter
+simplefilter(action='ignore', category=FutureWarning)
+```
+
+
+## Read data
+```{python}
+data = pd.read_csv("Consumer_Complaints_lemma.csv")
+data.head()
+```
+
+```{python}
+#writing partial data into csv as test set
+testset = pd.DataFrame(data, columns=['Lemmatized', 'Product'])[2001:3000]
+testset.to_csv(r'/Users/tinganlai/Documents/GitHub/PraticumProject-/rshiny/test.csv',  index=None, header=True)
+
+
+
+
+#df.to_csv(r'Path where you want to store the exported CSV file\File Name.csv')
+```
+
+
+
+```{python}
+#only use first 500 rows to try
+df1 = pd.DataFrame(data, columns=['Lemmatized','Product'])[1:2000]
+df1.head()
+```
+
+
+
+```{python}
+## use Multi-Class Log-Loss as evaluation metric
+def multiclass_logloss(actual, predicted, eps=1e-15):
+    # Multi-classification by Logarithmic Loss Metric
+    # param actual: actual target classes
+    # param predicted: result matrix of classification prediction, each category has a probability
+    
+    # Convert 'actual' to a binary array if it's not already:
+    if len(actual.shape) == 1:
+        actual2 = np.zeros((actual.shape[0], predicted.shape[1]))
+        for i, val in enumerate(actual):
+            actual2[i, val] = 1
+        actual = actual2
+
+    clip = np.clip(predicted, eps, 1 - eps)
+    rows = actual.shape[0]
+    vsota = np.sum(actual * np.log(clip))
+    return -1.0 / rows * vsota
+
+
+```
+
+```{r}
+library(reticulate)
+py_install("sklearn")
+```
+
+
+```{python}
+# transfer text labels (y) to integers 
+from sklearn import preprocessing, decomposition, model_selection, metrics, pipeline
+
+lbl_enc = preprocessing.LabelEncoder()
+y = lbl_enc.fit_transform(df1.Product.values)
+
+print(y.shape)
+```
+
+```{python}
+# train-test set split
+from sklearn.model_selection import train_test_split
+
+xtrain, xtest, ytrain, ytest = train_test_split(df1.Lemmatized.values, y, 
+                                                  stratify=y, 
+                                                  random_state=40, 
+                                                  test_size=0.1, shuffle=True)
+print (xtrain.shape)
+print (xtest.shape)
+
+```
+
+
+
+
+
+```{python}
+# build basic model：
+# TF-IDF transformation
+import pickle
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+
+tfv = TfidfVectorizer(min_df=3,  
+                        max_df=0.5,
+                        max_features=None,                 
+                        ngram_range=(1, 2), 
+                        use_idf=True, #enable inverse-document-frequency
+                        smooth_idf=True,
+                        stop_words = None)
+                        
+                        
+            pd.read            
+                        
+# fit TF-IDF model 
+tfvfit = tfv.fit(list(xtrain) + list(xtest))
+xtrain_tfv =  tfvfit.transform(xtrain) 
+xtest_tfv = tfvfit.transform(xtest)
+
+filename = 'tfvfit.pkl'
+pickle.dump(tfvfit, open(filename, 'wb'))
+
+
+```
+
+```{python}
+#write transformed x and y into csv (unfinished)
+transformed_test = pd.DataFrame(xtest_tfv, ytest)
+transformed_test.to_csv(r'/Users/tinganlai/Documents/GitHub/PraticumProject-/rshiny/transformed_test.csv',  index=None, header=True)
+
+```
+
+
+
+
+```{python}
+# train on logistic regression model
+from sklearn.linear_model import LogisticRegression
+
+clf = LogisticRegression(C=1.0,solver='lbfgs',multi_class='multinomial')
+clf.fit(xtrain_tfv, ytrain)
+predictions = clf.predict_proba(xtest_tfv)
+
+aaa = clf.predict(xtest_tfv)
+aaa
+print (predictions)
+print ("logloss: %0.3f " % multiclass_logloss(ytest, predictions))
+
+```
+
+
+
+
+### Save the model as pickle. We will use it in the shiny app
+```{python}
+import pickle 
+  
+# Save the trained model as a pickle string. 
+# saved_model = pickle.dumps(clf) 
+  
+# save the model to disk
+filename = 'finalized_model.pkl'
+pickle.dump(clf, open(filename, 'wb'))
+ 
+
+# Load the pickled model 
+# lg_from_pickle = pickle.loads(saved_model) 
+  
+# Use the loaded pickled model to make predictions 
+# lg_from_pickle.predict(xtest_tfv) 
+```
+
+
+```{python}
+# load the model from disk
+loaded_model = pickle.load(open(filename, 'rb'))
+result = loaded_model.score(xtest_tfv, ytest)
+print(result)
+
+```
+
+
+
