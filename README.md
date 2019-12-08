@@ -8,10 +8,11 @@ The app is designed for internal customer service personnel to immediately alloc
 ## How can you use this app?
 User can upload textual customer complaint in csv and obtain a product prediction csv file with each original customer complaint aside. This file can 
 
-## How did the NLP work in this app?
+## How does the NLP work in this app?
 - word embedding
 - model
 - parameter tunining
+- accuracy
 
 
 
