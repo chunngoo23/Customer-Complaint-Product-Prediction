@@ -16,5 +16,5 @@ User can upload textual customer complaint in csv and obtain a product predictio
 
 
 
-## Where was the data from?
+## Where is the data from?
 The embedded natural language processing model is built on the consumer complaint database from here: https://www.consumerfinance.gov/data-research/consumer-complaints/
