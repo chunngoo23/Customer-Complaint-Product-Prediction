@@ -1,6 +1,6 @@
 # Customer-Complaint-Product-Prediction
 
-This is a user-friendly R Shiny app that predict financial complaint product with natural language processing customer complaints. 
+This is a user-friendly R Shiny app that predict financial complaint product with natural language processing. 
 
 ## What is the purpose of this app?
 The app is designed for internal customer service to immediately allocate the correct service resources to loads of customer complaints. 
